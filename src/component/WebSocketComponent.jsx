@@ -1,9 +1,10 @@
 import React, { useEffect,useState } from 'react';
 import { w3cwebsocket as W3CWebSocket } from "websocket";
 import { Card, Avatar, Input, Typography } from 'antd';
+import { Button,Form,Row, Col,InputGroup,FormControl } from 'react-bootstrap'
 import 'antd/dist/antd.css';
 import './WebSocketComponent.css'
-
+const annyang =require('annyang'); 
 const { Search } = Input;
 const { Text } = Typography;
 const { Meta } = Card;
@@ -16,14 +17,35 @@ export default function WebSocketComponent() {
     isLoggedIn: false,
     messages: []
   })
-  const onButtonClicked = (value) => {
-    console.log("'rfz");
+  const voiceAssistant = ()=>{
+    if(annyang){
+      annyang.debug();
+      var commands= {
+         '*text': function(text){
+          document.getElementById('input').value=text.slice(0,-1);
+         } 
+        }
+      
+      annyang.addCommands(commands); 
+      annyang.addCallback('soundstart', function() {
+        console.log('sound detected');  
+      });
+      annyang.addCallback('result', function() {
+        console.log('sound stopped');
+      });
+      annyang.start()
+    }
+
+  }
+  const onButtonClicked = () => {
     client.send(JSON.stringify({
       type: "message",
-      msg: value,
+      msg: document.getElementById('input').value,
       user: data.userName
     }));
     setData({ ...data,searchVal: '' })
+    annyang.abort();
+
   }
 
   const onSubmit = (value) => {
@@ -75,14 +97,24 @@ export default function WebSocketComponent() {
             )}
           </div>
           <div className="bottom">
-            <Search
+            {/* <Search
               placeholder="input message and send"
               enterButton="Send"
               value={data.searchVal}
               size="large"
               onChange={(e) => setData({ ...data,searchVal: e.target.value })}
               onSearch={value => onButtonClicked(value)}
-            />
+            /> */}
+            <div style={{display:'flex'}}>
+              <input 
+              style={{height: '40px',
+              width: '-webkit-fill-available'}}
+              type='text'
+              id='input'
+               />
+               <input type="button" onClick={voiceAssistant} value="voice"/>
+              <input type="Submit" onClick={onButtonClicked} />
+            </div>
           </div> 
         </div>
         :
